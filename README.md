@@ -28,6 +28,10 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
    ```shell
    curl --header 'Content-Type: application/pdf' --data-binary /path/to/file.pdf http://127.0.0.1:8888/print-pdf?printer=Brother_MFC_L2700DN_series
    ```
+- `POST /print-pdf-url` - print PDF file from URL
+   ```shell
+   curl http://127.0.0.1:8888/print-pdf-url?printer=Brother_MFC_L2700DN_series&url=https%3A%2F%2Fpdfobject.com%2Fpdf%2Fsample.pdf
+   ```
 
 ## Roadmap
 
