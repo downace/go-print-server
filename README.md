@@ -31,9 +31,9 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
 
 ## Roadmap
 
-- [ ] Build releases with GitHub Actions
+- [x] Build releases with GitHub Actions
 - [ ] Windows support
-- [ ] Printing from URL
+- [x] Printing from URL
 - [ ] HTTPS support
 - [ ] CORS
 - [ ] ...

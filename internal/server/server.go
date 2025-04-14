@@ -42,6 +42,11 @@ func CreateServer(addr netip.AddrPort) *http.Server {
 		Headers("Content-Type", "application/json").
 		HandlerFunc(printPdf)
 
+	router.
+		Path("/print-pdf-url").
+		Methods("POST").
+		HandlerFunc(printPdfFromUrl)
+
 	router.MethodNotAllowedHandler = http.HandlerFunc(methodNotAllowed)
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 

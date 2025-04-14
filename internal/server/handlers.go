@@ -30,16 +30,21 @@ func respondJson(w http.ResponseWriter, data interface{}, status int) {
 	}
 }
 
+func handleError(err error, w http.ResponseWriter) {
+	if errors.Is(err, printing.ErrNotSupported) {
+		RespondError(w, err.Error(), http.StatusNotImplemented)
+	} else if errors.Is(err, printing.ErrRequestError) {
+		RespondError(w, err.Error(), http.StatusUnprocessableEntity)
+	} else {
+		RespondError(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func getPrinters(w http.ResponseWriter, _ *http.Request) {
 	printers, err := printing.ListPrinters()
 
-	if errors.Is(err, printing.ErrNotSupported) {
-		RespondError(w, err.Error(), http.StatusNotImplemented)
-		return
-	}
-
 	if err != nil {
-		RespondError(w, err.Error(), http.StatusInternalServerError)
+		handleError(err, w)
 		return
 	}
 
@@ -56,13 +61,33 @@ func printPdf(w http.ResponseWriter, r *http.Request) {
 
 	err := printing.PrintPDF(q.Get("printer"), r.Body)
 
-	if errors.Is(err, printing.ErrNotSupported) {
-		RespondError(w, err.Error(), http.StatusNotImplemented)
+	if err != nil {
+		handleError(err, w)
 		return
 	}
 
-	if err != nil {
-		RespondError(w, err.Error(), http.StatusInternalServerError)
+	RespondOk(w, nil)
+}
+
+func printPdfFromUrl(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	if !q.Has("printer") {
+		RespondError(w, "printer param missing", http.StatusUnprocessableEntity)
+		return
 	}
+
+	if !q.Has("url") {
+		RespondError(w, "url param missing", http.StatusUnprocessableEntity)
+		return
+	}
+
+	err := printing.PrintPDFFromUrl(q.Get("printer"), q.Get("url"))
+
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+
 	RespondOk(w, nil)
 }
