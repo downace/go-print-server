@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"github.com/downace/print-server/internal/logging"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -17,6 +18,8 @@ var appIcon []byte
 const AppName = "Print Server"
 
 func main() {
+	logging.InitLogs()
+
 	app := NewApp()
 
 	err := wails.Run(&options.App{
@@ -36,6 +39,7 @@ func main() {
 		Linux: &linux.Options{
 			Icon: appIcon,
 		},
+		Logger: logging.WailsLog,
 	})
 
 	if err != nil {

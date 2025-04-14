@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/samber/lo"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"slices"
@@ -13,7 +14,11 @@ import (
 func ListPrinters() ([]Printer, error) {
 	cmd := exec.Command("lpstat", "-e")
 
+	log.Printf("executing %s with %q", cmd.Path, cmd.Args)
+
 	output, err := cmd.CombinedOutput()
+
+	log.Printf("result: %q", output)
 
 	if err != nil {
 		return nil, fmt.Errorf("%s", output)
@@ -42,7 +47,11 @@ func PrintPDF(printer string, file io.Reader) error {
 
 	cmd := exec.Command("lp", "-d", printer, tmpFile.Name())
 
+	log.Printf("executing %s with %q", cmd.Path, cmd.Args)
+
 	output, err := cmd.CombinedOutput()
+
+	log.Printf("result: %q", output)
 
 	if err != nil {
 		return fmt.Errorf("%s", output)

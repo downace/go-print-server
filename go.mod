@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	fyne.io/systray v1.11.0
 	github.com/downace/go-config v0.2.0
+	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/samber/lo v1.49.1
 	github.com/wailsapp/wails/v2 v2.10.1
@@ -13,6 +14,7 @@ require (
 require (
 	github.com/LastPossum/kamino v0.0.2 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
+	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

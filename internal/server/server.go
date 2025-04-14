@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	"github.com/downace/print-server/internal/logging"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/netip"
@@ -45,8 +47,10 @@ func CreateServer(addr netip.AddrPort) *http.Server {
 
 	router.Use(panicHandlerMiddleware)
 
+	handler := handlers.CombinedLoggingHandler(logging.HttpLog.Writer(), router)
+
 	return &http.Server{
 		Addr:    addr.String(),
-		Handler: router,
+		Handler: handler,
 	}
 }

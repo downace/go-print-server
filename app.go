@@ -12,6 +12,7 @@ import (
 	"github.com/downace/print-server/internal/server"
 	"github.com/samber/lo"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"log"
 	"net"
 	"net/http"
 	"net/netip"
@@ -144,6 +145,7 @@ func (a *App) GetAvailableAddrs() ([]NetInterfaceAddress, error) {
 		addrs, err := iface.Addrs()
 
 		if err != nil {
+			log.Printf("error getting addrs for interface %s: %s", iface.Name, err)
 			continue
 		}
 
