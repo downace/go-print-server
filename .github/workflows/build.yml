@@ -1,0 +1,51 @@
+name: Wails build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  # Necessary for most environments as build failure can occur due to OOM issues
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -yq update
+          sudo apt-get -yq install libgtk-3-0 libwebkit2gtk-4.1-dev gcc-aarch64-linux-gnu
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.0'
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        shell: bash
+
+      - name: Build App
+        run: wails build -tags webkit2_41
+        shell: bash
+      - name: Add perms
+        run: chmod +x build/bin/*
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Wails Build
+          path: |
+            */bin/
+            *\bin\*
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            */bin/*
