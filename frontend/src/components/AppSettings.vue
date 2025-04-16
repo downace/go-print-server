@@ -10,8 +10,8 @@ type IpFamily = "all" | "ipv4" | "ipv6";
 
 const configStore = useConfigStore();
 
-const host = shallowRef<string>("");
-const port = shallowRef<number>(0);
+const host = shallowRef("");
+const port = shallowRef("0");
 const responseHeadersStr = shallowRef("");
 
 watch(
@@ -19,7 +19,7 @@ watch(
   (loaded) => {
     if (loaded) {
       host.value = configStore.host;
-      port.value = configStore.port;
+      port.value = String(configStore.port);
       responseHeadersStr.value = [...configStore.responseHeaders.entries()]
         .map(([name, value]) => `${name}: ${value}`)
         .join("\n");
@@ -89,7 +89,12 @@ watch(host, async (host) => {
 
 watch(port, async (port) => {
   try {
-    await configStore.updatePort(port);
+    const portNumber = Number.parseInt(port);
+    if (!Number.isFinite(portNumber)) {
+      portError.value = "Invalid port number";
+      return;
+    }
+    await configStore.updatePort(portNumber);
   } catch (e) {
     portError.value = e as string;
   }
