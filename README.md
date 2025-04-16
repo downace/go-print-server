@@ -39,5 +39,5 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
 - [ ] Windows support
 - [x] Printing from URL
 - [ ] HTTPS support
-- [ ] CORS
+- [x] CORS (via custom response headers)
 - [ ] ...
