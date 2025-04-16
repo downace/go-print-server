@@ -3,15 +3,8 @@ import { useConfigStore } from "@/configStore";
 import { GetAvailableAddrs } from "@/go/main/App";
 import { main } from "@/go/models";
 import { fullHeightPageStyleFn } from "@/helpers/fullHeightPageStyleFn";
-import { useDebounce } from "@vueuse/core";
 import { isIPv4, isIPv6 } from "is-ip";
-import {
-  computed,
-  onBeforeMount,
-  onBeforeUnmount,
-  shallowRef,
-  watch,
-} from "vue";
+import { computed, onBeforeMount, shallowRef, watch } from "vue";
 
 type IpFamily = "all" | "ipv4" | "ipv6";
 
@@ -78,21 +71,23 @@ onBeforeMount(async () => {
   availableAddrs.value = await GetAvailableAddrs();
 });
 
-const hostToSave = useDebounce(host, 1000);
+const hostError = shallowRef("");
+const portError = shallowRef("");
 
-watch(hostToSave, (h) => {
-  configStore.updateHost(h);
+watch(host, async (host) => {
+  try {
+    await configStore.updateHost(host);
+  } catch (e) {
+    hostError.value = e as string;
+  }
 });
 
-const portToSave = useDebounce(port, 1000);
-
-watch(portToSave, (p) => {
-  configStore.updatePort(p);
-});
-
-onBeforeUnmount(async () => {
-  await configStore.updateHost(host.value);
-  await configStore.updatePort(port.value);
+watch(port, async (port) => {
+  try {
+    await configStore.updatePort(port);
+  } catch (e) {
+    portError.value = e as string;
+  }
 });
 </script>
 
@@ -107,62 +102,75 @@ onBeforeUnmount(async () => {
         <q-btn flat round icon="mdi-close" to="/" title="Close" />
       </q-toolbar>
 
-      <div class="col relative-position">
-        <div class="q-pa-sm">
-          <div class="row no-wrap">
-            <div class="col">
-              <q-select
-                v-model="host"
-                :options="ipsToShow"
-                label="IP address"
-                option-value="ip"
-                option-label="ip"
-                emit-value
-              >
-                <template #before-options>
-                  <div class="row no-wrap items-center">
-                    <div class="col">
-                      <q-checkbox v-model="showOnlyUp" label="Only UP" />
-                    </div>
+      <div class="col relative-position column no-wrap q-pa-xs q-gutter-y-sm">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Server Address</div>
+            <div class="row no-wrap">
+              <div class="col">
+                <q-select
+                  v-model="host"
+                  :options="ipsToShow"
+                  label="IP"
+                  option-value="ip"
+                  option-label="ip"
+                  emit-value
+                  :error="!!hostError"
+                  :error-message="hostError"
+                >
+                  <template #before-options>
+                    <div class="row no-wrap items-center">
+                      <div class="col">
+                        <q-checkbox v-model="showOnlyUp" label="Only UP" />
+                      </div>
 
-                    <div class="col">
-                      <q-select
-                        v-model="showOnlyIpFamily"
-                        :options="ipFamilies"
-                        label="IP families"
-                        :option-label="ipFamilyLabel"
-                      >
-                      </q-select>
+                      <div class="col">
+                        <q-select
+                          v-model="showOnlyIpFamily"
+                          :options="ipFamilies"
+                          label="IP families"
+                          :option-label="ipFamilyLabel"
+                        >
+                        </q-select>
+                      </div>
                     </div>
-                  </div>
-                  <q-separator />
-                </template>
-                <template #option="{ opt, itemProps }">
-                  <q-item v-bind="itemProps">
-                    <q-item-section>
-                      <q-item-label>
-                        {{ opt.ip }}
-                      </q-item-label>
-                      <q-item-label caption>
-                        {{ opt.interface.name }}
-                      </q-item-label>
-                    </q-item-section>
-                    <q-item-section
-                      v-if="!opt.interface.isUp"
-                      avatar
-                      title="Interface is DOWN"
-                    >
-                      <q-icon name="mdi-link-off" />
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
+                    <q-separator />
+                  </template>
+                  <template #option="{ opt, itemProps }">
+                    <q-item v-bind="itemProps">
+                      <q-item-section>
+                        <q-item-label>
+                          {{ opt.ip }}
+                        </q-item-label>
+                        <q-item-label caption>
+                          {{ opt.interface.name }}
+                        </q-item-label>
+                      </q-item-section>
+                      <q-item-section
+                        v-if="!opt.interface.isUp"
+                        avatar
+                        title="Interface is DOWN"
+                      >
+                        <q-icon name="mdi-link-off" />
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
+              </div>
+              <div class="col-3">
+                <q-input
+                  :model-value="port"
+                  @change="port = $event"
+                  @input="portError = ''"
+                  type="number"
+                  label="Port"
+                  :error="!!portError"
+                  :error-message="portError"
+                />
+              </div>
             </div>
-            <div class="col-3">
-              <q-input v-model.number="port" label="Port"></q-input>
-            </div>
-          </div>
-        </div>
+          </q-card-section>
+        </q-card>
         <q-inner-loading :showing="!configStore.isLoaded" />
       </div>
     </div>

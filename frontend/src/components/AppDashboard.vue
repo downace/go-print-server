@@ -62,6 +62,12 @@ const serverAddress = computed(
       </div>
 
       <div class="col-2 column justify-end">
+        <q-banner v-if="serverStore.needsRestart" class="bg-blue text-white">
+          <template #avatar>
+            <q-icon name="mdi-restart"></q-icon>
+          </template>
+          Settings changed, restart server to apply them
+        </q-banner>
         <q-banner
           v-if="serverStore.status.error"
           dense
