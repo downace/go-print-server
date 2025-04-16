@@ -1,10 +1,14 @@
+import { useConfigStore } from "@/configStore";
 import { GetServerStatus, StartServer, StopServer } from "@/go/main/App";
 import type { main } from "@/go/models";
 import { EventsOn } from "@/runtime";
 import { defineStore } from "pinia";
-import { computed, onBeforeMount, readonly, shallowRef } from "vue";
+import { equals } from "ramda";
+import { computed, readonly, shallowRef, watch } from "vue";
 
 export const useServerStore = defineStore("server", () => {
+  const configStore = useConfigStore();
+
   const status = shallowRef<main.ServerStatus>({
     running: false,
     runningHost: "",
@@ -48,9 +52,23 @@ export const useServerStore = defineStore("server", () => {
     return status.value.running ? stopServer() : startServer();
   }
 
-  EventsOn("server-status-changed", (s) => {
+  EventsOn("server-status-changed", (s: main.ServerStatus) => {
+    if (s.running !== status.value.running) {
+      needsRestart.value = false;
+    }
     status.value = s;
   });
+
+  const needsRestart = shallowRef(false);
+
+  watch(
+    [() => configStore.host, () => configStore.port],
+    (newValues, oldValues) => {
+      if (status.value.running && !equals(newValues, oldValues)) {
+        needsRestart.value = true;
+      }
+    },
+  );
 
   const runningAddr = computed(() =>
     status.value.running
@@ -66,6 +84,8 @@ export const useServerStore = defineStore("server", () => {
     starting: readonly(starting),
     status: readonly(status),
     error: readonly(error),
+
+    needsRestart: readonly(needsRestart),
 
     runningAddr,
 
