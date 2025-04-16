@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useConfigStore } from "@/configStore";
-import { GetAvailableAddrs } from "@/go/main/App";
+import { GetAvailableAddrs, PickFilePath } from "@/go/main/App";
 import { main } from "@/go/models";
 import { fullHeightPageStyleFn } from "@/helpers/fullHeightPageStyleFn";
 import { isIPv4, isIPv6 } from "is-ip";
@@ -13,6 +13,9 @@ const configStore = useConfigStore();
 const host = shallowRef("");
 const port = shallowRef("0");
 const responseHeadersStr = shallowRef("");
+const tlsEnabled = shallowRef(false);
+const tlsCertFile = shallowRef("");
+const tlsKeyFile = shallowRef("");
 
 watch(
   () => configStore.isLoaded,
@@ -20,6 +23,9 @@ watch(
     if (loaded) {
       host.value = configStore.host;
       port.value = String(configStore.port);
+      tlsEnabled.value = configStore.tlsEnabled;
+      tlsCertFile.value = configStore.tlsCertFile;
+      tlsKeyFile.value = configStore.tlsKeyFile;
       responseHeadersStr.value = [...configStore.responseHeaders.entries()]
         .map(([name, value]) => `${name}: ${value}`)
         .join("\n");
@@ -78,6 +84,9 @@ onBeforeMount(async () => {
 const hostError = shallowRef("");
 const portError = shallowRef("");
 const headersError = shallowRef("");
+const tlsEnabledError = shallowRef("");
+const tlsCertFileError = shallowRef("");
+const tlsKeyFileError = shallowRef("");
 
 watch(host, async (host) => {
   try {
@@ -117,6 +126,50 @@ watch(responseHeadersStr, async (headers) => {
     headersError.value = e as string;
   }
 });
+
+watch(tlsEnabled, async (enabled) => {
+  try {
+    await configStore.updateTlsEnabled(enabled);
+  } catch (e) {
+    tlsEnabledError.value = e as string;
+  }
+});
+
+watch(tlsCertFile, async (certFile) => {
+  try {
+    await configStore.updateTlsCertFile(certFile);
+  } catch (e) {
+    tlsCertFileError.value = e as string;
+  }
+});
+
+watch(tlsKeyFile, async (keyFile) => {
+  try {
+    await configStore.updateTlsKeyFile(keyFile);
+  } catch (e) {
+    tlsKeyFileError.value = e as string;
+  }
+});
+
+async function pickTlsCertFile() {
+  const newPath = await PickFilePath();
+
+  if (!newPath) {
+    return;
+  }
+
+  tlsCertFile.value = newPath;
+}
+
+async function pickTlsKeyFile() {
+  const newPath = await PickFilePath();
+
+  if (!newPath) {
+    return;
+  }
+
+  tlsKeyFile.value = newPath;
+}
 
 const responseHeadersPlaceholder = `Example:
 
@@ -210,6 +263,7 @@ Access-Control-Allow-Headers: Accept
             <div class="text-h6">Response Headers</div>
             <q-input
               type="textarea"
+              rows="4"
               :model-value="responseHeadersStr"
               @change="responseHeadersStr = $event"
               @input="headersError = ''"
@@ -217,6 +271,59 @@ Access-Control-Allow-Headers: Accept
               :error="!!headersError"
               :error-message="headersError"
             />
+          </q-card-section>
+        </q-card>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">TLS</div>
+            <q-checkbox v-model="tlsEnabled" label="Enabled" />
+            <div
+              v-if="tlsEnabledError"
+              class="text-red ellipsis"
+              :title="tlsEnabledError"
+            >
+              {{ tlsEnabledError }}
+            </div>
+            <div class="row no-wrap q-gutter-x-sm">
+              <q-input
+                v-if="tlsEnabled"
+                label="Cert File"
+                :model-value="tlsCertFile"
+                @change="tlsCertFile = $event"
+                @input="tlsCertFileError = ''"
+                :error="!!tlsCertFileError"
+                :error-message="tlsCertFileError"
+              >
+                <template #append>
+                  <q-btn
+                    flat
+                    round
+                    icon="mdi-file"
+                    title="Pick File"
+                    @click="pickTlsCertFile"
+                  />
+                </template>
+              </q-input>
+              <q-input
+                v-if="tlsEnabled"
+                label="Key File"
+                :model-value="tlsKeyFile"
+                @change="tlsKeyFile = $event"
+                @input="tlsKeyFileError = ''"
+                :error="!!tlsKeyFileError"
+                :error-message="tlsKeyFileError"
+              >
+                <template #append>
+                  <q-btn
+                    flat
+                    round
+                    icon="mdi-file"
+                    title="Pick File"
+                    @click="pickTlsKeyFile"
+                  />
+                </template>
+              </q-input>
+            </div>
           </q-card-section>
         </q-card>
         <q-inner-loading :showing="!configStore.isLoaded" />

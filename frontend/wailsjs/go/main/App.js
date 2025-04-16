@@ -14,6 +14,10 @@ export function GetServerStatus() {
   return window['go']['main']['App']['GetServerStatus']();
 }
 
+export function PickFilePath() {
+  return window['go']['main']['App']['PickFilePath']();
+}
+
 export function StartServer() {
   return window['go']['main']['App']['StartServer']();
 }
@@ -32,4 +36,16 @@ export function UpdateServerHost(arg1) {
 
 export function UpdateServerPort(arg1) {
   return window['go']['main']['App']['UpdateServerPort'](arg1);
+}
+
+export function UpdateTLSCertFile(arg1) {
+  return window['go']['main']['App']['UpdateTLSCertFile'](arg1);
+}
+
+export function UpdateTLSEnabled(arg1) {
+  return window['go']['main']['App']['UpdateTLSEnabled'](arg1);
+}
+
+export function UpdateTLSKeyFile(arg1) {
+  return window['go']['main']['App']['UpdateTLSKeyFile'](arg1);
 }

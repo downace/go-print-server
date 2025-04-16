@@ -8,6 +8,8 @@ export function GetConfig():Promise<main.AppConfig>;
 
 export function GetServerStatus():Promise<main.ServerStatus>;
 
+export function PickFilePath():Promise<string>;
+
 export function StartServer():Promise<void>;
 
 export function StopServer():Promise<void>;
@@ -17,3 +19,9 @@ export function UpdateResponseHeaders(arg1:Record<string, string>):Promise<void>
 export function UpdateServerHost(arg1:string):Promise<void>;
 
 export function UpdateServerPort(arg1:number):Promise<void>;
+
+export function UpdateTLSCertFile(arg1:string):Promise<void>;
+
+export function UpdateTLSEnabled(arg1:boolean):Promise<void>;
+
+export function UpdateTLSKeyFile(arg1:string):Promise<void>;

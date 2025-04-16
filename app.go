@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"os"
 )
 
 //go:embed build/trayicon_default.png
@@ -36,10 +37,17 @@ type AppTrayMenuItems struct {
 	mToggleServer *systray.MenuItem
 }
 
+type AppConfigTLS struct {
+	Enabled  bool   `yaml:"enabled" json:"enabled"`
+	CertFile string `yaml:"certFile" json:"certFile"`
+	KeyFile  string `yaml:"keyFile" json:"keyFile"`
+}
+
 type AppConfig struct {
 	Host            string            `yaml:"host" json:"host"`
 	Port            uint16            `yaml:"port" json:"port"`
 	ResponseHeaders map[string]string `yaml:"responseHeaders" json:"responseHeaders"`
+	TLS             AppConfigTLS      `yaml:"tls" json:"tls"`
 }
 
 // App struct
@@ -222,6 +230,59 @@ func (a *App) UpdateResponseHeaders(newVal map[string]string) error {
 	})
 }
 
+func (a *App) UpdateTLSEnabled(newVal bool) error {
+	if a.config.Data.TLS.Enabled == newVal {
+		return nil
+	}
+	return a.config.Transaction(func(data *AppConfig) error {
+		data.TLS.Enabled = newVal
+		return nil
+	})
+}
+
+func (a *App) UpdateTLSCertFile(newVal string) error {
+	if a.config.Data.TLS.CertFile == newVal {
+		return nil
+	}
+
+	if err := validateFile(newVal); err != nil {
+		return err
+	}
+
+	return a.config.Transaction(func(data *AppConfig) error {
+		data.TLS.CertFile = newVal
+		return nil
+	})
+}
+
+func (a *App) UpdateTLSKeyFile(newVal string) error {
+	if a.config.Data.TLS.KeyFile == newVal {
+		return nil
+	}
+
+	if err := validateFile(newVal); err != nil {
+		return err
+	}
+
+	return a.config.Transaction(func(data *AppConfig) error {
+		data.TLS.KeyFile = newVal
+		return nil
+	})
+}
+
+func validateFile(path string) error {
+	stat, err := os.Stat(path)
+
+	if err != nil {
+		return err
+	}
+
+	if stat.IsDir() {
+		return errors.New("path is a directory")
+	}
+	return nil
+}
+
 func (a *App) GetServerStatus() ServerStatus {
 	return a.serverStatus()
 }
@@ -236,7 +297,12 @@ func (a *App) StartServer() {
 	)
 
 	go func() {
-		err := a.httpServer.ListenAndServe()
+		var err error
+		if a.config.Data.TLS.Enabled {
+			err = a.httpServer.ListenAndServeTLS(a.config.Data.TLS.CertFile, a.config.Data.TLS.KeyFile)
+		} else {
+			err = a.httpServer.ListenAndServe()
+		}
 		a.httpServer = nil
 		if errors.Is(err, http.ErrServerClosed) {
 			a.handleStatusChange(ServerStatus{Running: false})
@@ -252,6 +318,10 @@ func (a *App) StopServer() {
 	if a.httpServer != nil {
 		_ = a.httpServer.Close()
 	}
+}
+
+func (a *App) PickFilePath() (string, error) {
+	return runtime.OpenFileDialog(a.baseApp.Ctx, runtime.OpenDialogOptions{})
 }
 
 func (a *App) handleStatusChange(status ServerStatus) {

@@ -38,6 +38,6 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
 - [x] Build releases with GitHub Actions
 - [ ] Windows support
 - [x] Printing from URL
-- [ ] HTTPS support
+- [x] HTTPS support
 - [x] CORS (via custom response headers)
 - [ ] ...
