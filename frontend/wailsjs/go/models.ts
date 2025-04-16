@@ -3,6 +3,7 @@ export namespace main {
 	export interface AppConfig {
 	    host: string;
 	    port: number;
+	    responseHeaders: Record<string, string>;
 	}
 	export interface NetInterface {
 	    name: string;

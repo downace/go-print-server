@@ -62,7 +62,11 @@ export const useServerStore = defineStore("server", () => {
   const needsRestart = shallowRef(false);
 
   watch(
-    [() => configStore.host, () => configStore.port],
+    [
+      () => configStore.host,
+      () => configStore.port,
+      () => configStore.responseHeaders,
+    ],
     (newValues, oldValues) => {
       if (status.value.running && !equals(newValues, oldValues)) {
         needsRestart.value = true;

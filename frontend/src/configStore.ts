@@ -1,5 +1,11 @@
-import { GetConfig, UpdateServerHost, UpdateServerPort } from "@/go/main/App";
+import {
+  GetConfig,
+  UpdateResponseHeaders,
+  UpdateServerHost,
+  UpdateServerPort,
+} from "@/go/main/App";
 import { defineStore } from "pinia";
+import { equals } from "ramda";
 import { onBeforeMount, readonly, shallowRef } from "vue";
 
 export const useConfigStore = defineStore("config", () => {
@@ -7,12 +13,14 @@ export const useConfigStore = defineStore("config", () => {
 
   const host = shallowRef("");
   const port = shallowRef(0);
+  const responseHeaders = shallowRef(new Map<string, string>());
 
   async function loadConfig() {
     const config = await GetConfig();
 
     host.value = config.host;
     port.value = config.port;
+    responseHeaders.value = new Map(Object.entries(config.responseHeaders));
 
     isLoaded.value = true;
   }
@@ -33,6 +41,14 @@ export const useConfigStore = defineStore("config", () => {
     port.value = newPort;
   }
 
+  async function updateResponseHeaders(newHeaders: Map<string, string>) {
+    if (equals(newHeaders, responseHeaders.value)) {
+      return;
+    }
+    await UpdateResponseHeaders(Object.fromEntries(newHeaders.entries()));
+    responseHeaders.value = newHeaders;
+  }
+
   onBeforeMount(loadConfig);
 
   return {
@@ -40,8 +56,10 @@ export const useConfigStore = defineStore("config", () => {
 
     host: readonly(host),
     port: readonly(port),
+    responseHeaders: readonly(responseHeaders),
 
     updateHost,
     updatePort,
+    updateResponseHeaders,
   };
 });

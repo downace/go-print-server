@@ -22,6 +22,10 @@ export function StopServer() {
   return window['go']['main']['App']['StopServer']();
 }
 
+export function UpdateResponseHeaders(arg1) {
+  return window['go']['main']['App']['UpdateResponseHeaders'](arg1);
+}
+
 export function UpdateServerHost(arg1) {
   return window['go']['main']['App']['UpdateServerHost'](arg1);
 }

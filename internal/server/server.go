@@ -28,7 +28,18 @@ func panicHandlerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func CreateServer(addr netip.AddrPort) *http.Server {
+func responseHeadersMiddleware(headers map[string]string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			for name, value := range headers {
+				writer.Header().Set(name, value)
+			}
+			next.ServeHTTP(writer, request)
+		})
+	}
+}
+
+func CreateServer(addr netip.AddrPort, responseHeaders map[string]string) *http.Server {
 	router := mux.NewRouter()
 
 	router.
@@ -51,6 +62,7 @@ func CreateServer(addr netip.AddrPort) *http.Server {
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 
 	router.Use(panicHandlerMiddleware)
+	router.Use(responseHeadersMiddleware(responseHeaders))
 
 	handler := handlers.CombinedLoggingHandler(logging.HttpLog.Writer(), router)
 

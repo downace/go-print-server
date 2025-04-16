@@ -12,6 +12,8 @@ export function StartServer():Promise<void>;
 
 export function StopServer():Promise<void>;
 
+export function UpdateResponseHeaders(arg1:Record<string, string>):Promise<void>;
+
 export function UpdateServerHost(arg1:string):Promise<void>;
 
 export function UpdateServerPort(arg1:number):Promise<void>;

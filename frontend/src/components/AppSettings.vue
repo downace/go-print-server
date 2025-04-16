@@ -12,6 +12,7 @@ const configStore = useConfigStore();
 
 const host = shallowRef<string>("");
 const port = shallowRef<number>(0);
+const responseHeadersStr = shallowRef("");
 
 watch(
   () => configStore.isLoaded,
@@ -19,6 +20,9 @@ watch(
     if (loaded) {
       host.value = configStore.host;
       port.value = configStore.port;
+      responseHeadersStr.value = [...configStore.responseHeaders.entries()]
+        .map(([name, value]) => `${name}: ${value}`)
+        .join("\n");
     }
   },
   { immediate: true },
@@ -73,6 +77,7 @@ onBeforeMount(async () => {
 
 const hostError = shallowRef("");
 const portError = shallowRef("");
+const headersError = shallowRef("");
 
 watch(host, async (host) => {
   try {
@@ -89,6 +94,30 @@ watch(port, async (port) => {
     portError.value = e as string;
   }
 });
+
+watch(responseHeadersStr, async (headers) => {
+  try {
+    await configStore.updateResponseHeaders(
+      new Map(
+        headers
+          .split("\n")
+          .filter((line) => line.trim() !== "")
+          .map((line) => {
+            const pair = line.split(":", 2);
+            return [pair[0].trim(), (pair[1] ?? "").trim()];
+          }),
+      ),
+    );
+  } catch (e) {
+    headersError.value = e as string;
+  }
+});
+
+const responseHeadersPlaceholder = `Example:
+
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Headers: Accept
+`;
 </script>
 
 <template>
@@ -169,6 +198,20 @@ watch(port, async (port) => {
                 />
               </div>
             </div>
+          </q-card-section>
+        </q-card>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Response Headers</div>
+            <q-input
+              type="textarea"
+              :model-value="responseHeadersStr"
+              @change="responseHeadersStr = $event"
+              @input="headersError = ''"
+              :placeholder="responseHeadersPlaceholder"
+              :error="!!headersError"
+              :error-message="headersError"
+            />
           </q-card-section>
         </q-card>
         <q-inner-loading :showing="!configStore.isLoaded" />

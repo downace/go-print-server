@@ -13,6 +13,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"log"
+	"maps"
 	"net"
 	"net/http"
 	"net/netip"
@@ -36,8 +37,9 @@ type AppTrayMenuItems struct {
 }
 
 type AppConfig struct {
-	Host string `yaml:"host" json:"host"`
-	Port uint16 `yaml:"port" json:"port"`
+	Host            string            `yaml:"host" json:"host"`
+	Port            uint16            `yaml:"port" json:"port"`
+	ResponseHeaders map[string]string `yaml:"responseHeaders" json:"responseHeaders"`
 }
 
 // App struct
@@ -52,8 +54,9 @@ type App struct {
 func NewApp() *App {
 	a := App{
 		config: config.NewConfigMinimal(AppConfig{
-			Host: "0.0.0.0",
-			Port: 8888,
+			Host:            "0.0.0.0",
+			Port:            8888,
+			ResponseHeaders: map[string]string{},
 		}),
 	}
 	a.baseApp.InitTray = a.initTray
@@ -209,6 +212,16 @@ func (a *App) UpdateServerPort(newVal uint16) error {
 	})
 }
 
+func (a *App) UpdateResponseHeaders(newVal map[string]string) error {
+	if maps.Equal(newVal, a.config.Data.ResponseHeaders) {
+		return nil
+	}
+	return a.config.Transaction(func(data *AppConfig) error {
+		data.ResponseHeaders = newVal
+		return nil
+	})
+}
+
 func (a *App) GetServerStatus() ServerStatus {
 	return a.serverStatus()
 }
@@ -217,7 +230,10 @@ func (a *App) StartServer() {
 	if a.httpServer != nil {
 		_ = a.httpServer.Close()
 	}
-	a.httpServer = server.CreateServer(netip.AddrPortFrom(netip.MustParseAddr(a.config.Data.Host), a.config.Data.Port))
+	a.httpServer = server.CreateServer(
+		netip.AddrPortFrom(netip.MustParseAddr(a.config.Data.Host), a.config.Data.Port),
+		a.config.Data.ResponseHeaders,
+	)
 
 	go func() {
 		err := a.httpServer.ListenAndServe()
