@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useConfigStore } from "@/configStore";
-import { GetAvailableAddrs, PickFilePath } from "@/go/main/App";
-import { main } from "@/go/models";
+import { GetAvailableAddrs, PickFilePath } from "@/go/gui/App";
+import { gui } from "@/go/models";
 import { fullHeightPageStyleFn } from "@/helpers/fullHeightPageStyleFn";
 import { isIPv4, isIPv6 } from "is-ip";
 import { computed, onBeforeMount, shallowRef, watch } from "vue";
@@ -46,7 +46,7 @@ function ipFamilyLabel(family: IpFamily) {
   }[family];
 }
 
-const availableAddrs = shallowRef([] as main.NetInterfaceAddress[]);
+const availableAddrs = shallowRef([] as gui.NetInterfaceAddress[]);
 
 const ipsToShow = computed(() =>
   [

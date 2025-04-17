@@ -1,6 +1,6 @@
 import { useConfigStore } from "@/configStore";
-import { GetServerStatus, StartServer, StopServer } from "@/go/main/App";
-import type { main } from "@/go/models";
+import { GetServerStatus, StartServer, StopServer } from "@/go/gui/App";
+import type { gui } from "@/go/models";
 import { EventsOn } from "@/runtime";
 import { defineStore } from "pinia";
 import { equals } from "ramda";
@@ -9,7 +9,7 @@ import { computed, readonly, shallowRef, watch } from "vue";
 export const useServerStore = defineStore("server", () => {
   const configStore = useConfigStore();
 
-  const status = shallowRef<main.ServerStatus>({
+  const status = shallowRef<gui.ServerStatus>({
     running: false,
     runningHost: "",
     runningPort: 0,
@@ -52,7 +52,7 @@ export const useServerStore = defineStore("server", () => {
     return status.value.running ? stopServer() : startServer();
   }
 
-  EventsOn("server-status-changed", (s: main.ServerStatus) => {
+  EventsOn("server-status-changed", (s: gui.ServerStatus) => {
     if (s.running !== status.value.running) {
       needsRestart.value = false;
     }

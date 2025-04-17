@@ -14,7 +14,7 @@ export namespace appconfig {
 
 }
 
-export namespace main {
+export namespace gui {
 	
 	export interface NetInterface {
 	    name: string;

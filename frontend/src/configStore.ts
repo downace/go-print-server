@@ -6,7 +6,7 @@ import {
   UpdateTLSCertFile,
   UpdateTLSEnabled,
   UpdateTLSKeyFile,
-} from "@/go/main/App";
+} from "@/go/gui/App";
 import { defineStore } from "pinia";
 import { equals } from "ramda";
 import { onBeforeMount, readonly, shallowRef } from "vue";

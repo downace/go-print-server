@@ -1,4 +1,4 @@
-package main
+package gui
 
 import (
 	"context"
@@ -27,19 +27,19 @@ import (
 	"os"
 )
 
-//go:embed build/appicon.png
+//go:embed resources/window_icon.png
 var windowIcon []byte
 
-//go:embed build/trayicon_default.png
+//go:embed resources/trayicon_default.png
 var trayIconDefault []byte
 
-//go:embed build/trayicon_running.png
+//go:embed resources/trayicon_running.png
 var trayIconRunning []byte
 
-//go:embed build/trayicon_stopped.png
+//go:embed resources/trayicon_stopped.png
 var trayIconStopped []byte
 
-//go:embed build/trayicon_error.png
+//go:embed resources/trayicon_error.png
 var trayIconError []byte
 
 type AppTrayMenuItems struct {
