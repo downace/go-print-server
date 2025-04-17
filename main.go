@@ -24,6 +24,8 @@ func main() {
 	if isCli {
 		err = cli.RunApp()
 	} else {
+		// https://github.com/wailsapp/wails/issues/2977
+		_ = os.Setenv("WEBKIT_DISABLE_DMABUF_RENDERER", "1")
 		err = gui.RunApp(AppName, assets)
 	}
 
