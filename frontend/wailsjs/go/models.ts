@@ -1,6 +1,6 @@
-export namespace main {
+export namespace appconfig {
 	
-	export interface AppConfigTLS {
+	export interface TLSConfig {
 	    enabled: boolean;
 	    certFile: string;
 	    keyFile: string;
@@ -9,8 +9,12 @@ export namespace main {
 	    host: string;
 	    port: number;
 	    responseHeaders: Record<string, string>;
-	    tls: AppConfigTLS;
+	    tls: TLSConfig;
 	}
+
+}
+
+export namespace main {
 	
 	export interface NetInterface {
 	    name: string;

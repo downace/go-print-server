@@ -2,15 +2,22 @@ package main
 
 import (
 	"context"
+	"embed"
 	_ "embed"
 	"errors"
 	"fmt"
 	"fyne.io/systray"
 	"github.com/downace/go-config"
-	"github.com/downace/print-server/internal/app"
+	"github.com/downace/print-server/internal/appconfig"
 	"github.com/downace/print-server/internal/common"
+	"github.com/downace/print-server/internal/guiapp"
+	"github.com/downace/print-server/internal/logging"
 	"github.com/downace/print-server/internal/server"
 	"github.com/samber/lo"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/linux"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"log"
 	"maps"
@@ -19,6 +26,9 @@ import (
 	"net/netip"
 	"os"
 )
+
+//go:embed build/appicon.png
+var windowIcon []byte
 
 //go:embed build/trayicon_default.png
 var trayIconDefault []byte
@@ -37,31 +47,42 @@ type AppTrayMenuItems struct {
 	mToggleServer *systray.MenuItem
 }
 
-type AppConfigTLS struct {
-	Enabled  bool   `yaml:"enabled" json:"enabled"`
-	CertFile string `yaml:"certFile" json:"certFile"`
-	KeyFile  string `yaml:"keyFile" json:"keyFile"`
-}
-
-type AppConfig struct {
-	Host            string            `yaml:"host" json:"host"`
-	Port            uint16            `yaml:"port" json:"port"`
-	ResponseHeaders map[string]string `yaml:"responseHeaders" json:"responseHeaders"`
-	TLS             AppConfigTLS      `yaml:"tls" json:"tls"`
-}
-
-// App struct
 type App struct {
-	baseApp app.BaseApp
+	appName string
+	baseApp guiapp.BaseApp
 
-	config        *config.Config[AppConfig]
+	config        *config.Config[appconfig.AppConfig]
 	trayMenuItems AppTrayMenuItems
 	httpServer    *http.Server
 }
 
-func NewApp() *App {
+func RunApp(appName string, assets embed.FS) error {
+	app := NewApp(appName)
+	return wails.Run(&options.App{
+		Title:         appName,
+		Width:         400,
+		Height:        600,
+		DisableResize: true,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		OnStartup:     app.startup,
+		OnBeforeClose: app.beforeClose,
+		OnShutdown:    app.shutdown,
+		Bind: []interface{}{
+			app,
+		},
+		Linux: &linux.Options{
+			Icon: windowIcon,
+		},
+		Logger: logging.WailsLog,
+	})
+}
+
+func NewApp(appName string) *App {
 	a := App{
-		config: config.NewConfigMinimal(AppConfig{
+		appName: appName,
+		config: config.NewConfigMinimal(appconfig.AppConfig{
 			Host:            "0.0.0.0",
 			Port:            8888,
 			ResponseHeaders: map[string]string{},
@@ -92,7 +113,7 @@ func (a *App) onWindowHidden(hidden bool) {
 
 func (a *App) initTray() {
 	systray.SetIcon(trayIconDefault)
-	systray.SetTitle(AppName)
+	systray.SetTitle(a.appName)
 
 	a.trayMenuItems.mToggleWindow = systray.AddMenuItem("Hide window", "Hide window")
 	systray.AddSeparator()
@@ -131,7 +152,7 @@ type ServerStatus struct {
 	RunningPort uint16 `json:"runningPort"`
 }
 
-func (a *App) GetConfig() AppConfig {
+func (a *App) GetConfig() appconfig.AppConfig {
 	return a.config.Data
 }
 
@@ -204,7 +225,7 @@ func (a *App) UpdateServerHost(newVal string) error {
 		return err
 	}
 
-	return a.config.Transaction(func(c *AppConfig) error {
+	return a.config.Transaction(func(c *appconfig.AppConfig) error {
 		c.Host = newVal
 		return nil
 	})
@@ -214,7 +235,7 @@ func (a *App) UpdateServerPort(newVal uint16) error {
 	if newVal == a.config.Data.Port {
 		return nil
 	}
-	return a.config.Transaction(func(c *AppConfig) error {
+	return a.config.Transaction(func(c *appconfig.AppConfig) error {
 		c.Port = newVal
 		return nil
 	})
@@ -224,7 +245,7 @@ func (a *App) UpdateResponseHeaders(newVal map[string]string) error {
 	if maps.Equal(newVal, a.config.Data.ResponseHeaders) {
 		return nil
 	}
-	return a.config.Transaction(func(data *AppConfig) error {
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
 		data.ResponseHeaders = newVal
 		return nil
 	})
@@ -234,7 +255,7 @@ func (a *App) UpdateTLSEnabled(newVal bool) error {
 	if a.config.Data.TLS.Enabled == newVal {
 		return nil
 	}
-	return a.config.Transaction(func(data *AppConfig) error {
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
 		data.TLS.Enabled = newVal
 		return nil
 	})
@@ -249,7 +270,7 @@ func (a *App) UpdateTLSCertFile(newVal string) error {
 		return err
 	}
 
-	return a.config.Transaction(func(data *AppConfig) error {
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
 		data.TLS.CertFile = newVal
 		return nil
 	})
@@ -264,7 +285,7 @@ func (a *App) UpdateTLSKeyFile(newVal string) error {
 		return err
 	}
 
-	return a.config.Transaction(func(data *AppConfig) error {
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
 		data.TLS.KeyFile = newVal
 		return nil
 	})
@@ -328,19 +349,19 @@ func (a *App) handleStatusChange(status ServerStatus) {
 	runtime.EventsEmit(a.baseApp.Ctx, "server-status-changed", status)
 
 	if status.Running {
-		runtime.WindowSetTitle(a.baseApp.Ctx, fmt.Sprintf("%s - Running on %s:%d", AppName, status.RunningHost, status.RunningPort))
+		runtime.WindowSetTitle(a.baseApp.Ctx, fmt.Sprintf("%s - Running on %s:%d", a.appName, status.RunningHost, status.RunningPort))
 		systray.SetIcon(trayIconRunning)
-		systray.SetTitle(fmt.Sprintf("%s\nRunning on %s:%d", AppName, status.RunningHost, status.RunningPort))
+		systray.SetTitle(fmt.Sprintf("%s\nRunning on %s:%d", a.appName, status.RunningHost, status.RunningPort))
 		a.trayMenuItems.mToggleServer.SetTitle("Stop server")
 		a.trayMenuItems.mToggleServer.Enable()
 	} else {
-		runtime.WindowSetTitle(a.baseApp.Ctx, fmt.Sprintf("%s - Stopped", AppName))
+		runtime.WindowSetTitle(a.baseApp.Ctx, fmt.Sprintf("%s - Stopped", a.appName))
 		if status.Error != "" {
 			systray.SetIcon(trayIconError)
 		} else {
 			systray.SetIcon(trayIconStopped)
 		}
-		systray.SetTitle(fmt.Sprintf("%s\nStopped", AppName))
+		systray.SetTitle(fmt.Sprintf("%s\nStopped", a.appName))
 		a.trayMenuItems.mToggleServer.SetTitle("Start server")
 		a.trayMenuItems.mToggleServer.Enable()
 	}
