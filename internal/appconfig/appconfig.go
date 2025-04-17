@@ -12,3 +12,11 @@ type AppConfig struct {
 	ResponseHeaders map[string]string `yaml:"responseHeaders" json:"responseHeaders"`
 	TLS             TLSConfig         `yaml:"tls" json:"tls"`
 }
+
+func NewDefaultConfig() AppConfig {
+	return AppConfig{
+		Host:            "0.0.0.0",
+		Port:            8888,
+		ResponseHeaders: map[string]string{},
+	}
+}

@@ -82,11 +82,7 @@ func RunApp(appName string, assets embed.FS) error {
 func NewApp(appName string) *App {
 	a := App{
 		appName: appName,
-		config: config.NewConfigMinimal(appconfig.AppConfig{
-			Host:            "0.0.0.0",
-			Port:            8888,
-			ResponseHeaders: map[string]string{},
-		}),
+		config:  config.NewConfigMinimal(appconfig.NewDefaultConfig()),
 	}
 	a.baseApp.InitTray = a.initTray
 	a.baseApp.OnWindowHidden = a.onWindowHidden
@@ -312,18 +308,10 @@ func (a *App) StartServer() {
 	if a.httpServer != nil {
 		_ = a.httpServer.Close()
 	}
-	a.httpServer = server.CreateServer(
-		netip.AddrPortFrom(netip.MustParseAddr(a.config.Data.Host), a.config.Data.Port),
-		a.config.Data.ResponseHeaders,
-	)
+	a.httpServer = server.CreateServer(a.config.Data)
 
 	go func() {
-		var err error
-		if a.config.Data.TLS.Enabled {
-			err = a.httpServer.ListenAndServeTLS(a.config.Data.TLS.CertFile, a.config.Data.TLS.KeyFile)
-		} else {
-			err = a.httpServer.ListenAndServe()
-		}
+		err := server.RunServer(a.httpServer, a.config.Data)
 		a.httpServer = nil
 		if errors.Is(err, http.ErrServerClosed) {
 			a.handleStatusChange(ServerStatus{Running: false})

@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/downace/print-server/internal/appconfig"
 	"github.com/downace/print-server/internal/logging"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -39,7 +40,14 @@ func responseHeadersMiddleware(headers map[string]string) func(next http.Handler
 	}
 }
 
-func CreateServer(addr netip.AddrPort, responseHeaders map[string]string) *http.Server {
+func CreateServer(config appconfig.AppConfig) *http.Server {
+	return createServer(
+		netip.AddrPortFrom(netip.MustParseAddr(config.Host), config.Port),
+		config.ResponseHeaders,
+	)
+}
+
+func createServer(addr netip.AddrPort, responseHeaders map[string]string) *http.Server {
 	router := mux.NewRouter()
 
 	router.
@@ -69,5 +77,13 @@ func CreateServer(addr netip.AddrPort, responseHeaders map[string]string) *http.
 	return &http.Server{
 		Addr:    addr.String(),
 		Handler: handler,
+	}
+}
+
+func RunServer(server *http.Server, config appconfig.AppConfig) error {
+	if config.TLS.Enabled {
+		return server.ListenAndServeTLS(config.TLS.CertFile, config.TLS.KeyFile)
+	} else {
+		return server.ListenAndServe()
 	}
 }
