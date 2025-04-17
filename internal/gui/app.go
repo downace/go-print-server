@@ -137,7 +137,9 @@ func (a *App) initTray() {
 }
 
 func (a *App) shutdown(ctx context.Context) {
-	_ = a.httpServer.Shutdown(ctx)
+	if a.httpServer != nil {
+		_ = a.httpServer.Shutdown(ctx)
+	}
 	a.baseApp.Shutdown(ctx)
 }
 
