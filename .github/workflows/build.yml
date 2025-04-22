@@ -14,12 +14,24 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - os: 'ubuntu-latest'
+            output-name: 'print-server-linux-${{ github.ref_name }}'
+            build-options: '--platform linux/amd64 -tags webkit2_41'
+          - os: 'windows-latest'
+            output-name: 'print-server-win-${{ github.ref_name }}.exe'
+            build-options: '--platform windows/amd64 -nsis'
+
+    runs-on: ${{ matrix.build.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install Linux Dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get -yq update
           sudo apt-get -yq install libgtk-3-0 libwebkit2gtk-4.1-dev gcc-aarch64-linux-gnu
@@ -32,15 +44,16 @@ jobs:
         shell: bash
 
       - name: Build App
-        run: wails build -tags webkit2_41
+        run: wails build ${{ matrix.build.build-options }} -o ${{ matrix.build.output-name }}
         shell: bash
-      - name: Add perms
+      - name: Add Linux perms
+        if: runner.os  == 'Linux'
         run: chmod +x build/bin/*
         shell: bash
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Wails Build
+          name: Wails Build ${{ runner.os }}
           path: |
             */bin/
             *\bin\*

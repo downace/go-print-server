@@ -9,7 +9,7 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
 ## Supported Platforms
 
 - Linux - supported using `lp` and `lpstat`
-- Windows - coming soon
+- Windows - supported using `wmic` and embedded [`SumatraPDF`](https://www.sumatrapdfreader.org/)
 - macOS - not supported (PR's are welcome)
 
 ## Server API
@@ -40,7 +40,7 @@ Run app with `--cli` flag to run server without GUI
 ## Roadmap
 
 - [x] Build releases with GitHub Actions
-- [ ] Windows support
+- [x] Windows support
 - [x] Printing from URL
 - [x] HTTPS support
 - [x] CORS (via custom response headers)
