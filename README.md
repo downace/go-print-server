@@ -35,7 +35,7 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
 
 ## CLI mode
 
-Run app with `--cli` flag to run server without GUI
+Run app with `cli` argument to run server without GUI. Use `cli -help` for help
 
 ## Roadmap
 
