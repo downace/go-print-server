@@ -30,18 +30,6 @@ import (
 //go:embed resources/window_icon.png
 var windowIcon []byte
 
-//go:embed resources/trayicon_default.png
-var trayIconDefault []byte
-
-//go:embed resources/trayicon_running.png
-var trayIconRunning []byte
-
-//go:embed resources/trayicon_stopped.png
-var trayIconStopped []byte
-
-//go:embed resources/trayicon_error.png
-var trayIconError []byte
-
 type AppTrayMenuItems struct {
 	mToggleWindow *systray.MenuItem
 	mToggleServer *systray.MenuItem
@@ -109,7 +97,7 @@ func (a *App) onWindowHidden(hidden bool) {
 
 func (a *App) initTray() {
 	systray.SetIcon(trayIconDefault)
-	systray.SetTitle(a.appName)
+	a.baseApp.SetTrayTitle(a.appName)
 
 	a.trayMenuItems.mToggleWindow = systray.AddMenuItem("Hide window", "Hide window")
 	systray.AddSeparator()
@@ -341,7 +329,7 @@ func (a *App) handleStatusChange(status ServerStatus) {
 	if status.Running {
 		runtime.WindowSetTitle(a.baseApp.Ctx, fmt.Sprintf("%s - Running on %s:%d", a.appName, status.RunningHost, status.RunningPort))
 		systray.SetIcon(trayIconRunning)
-		systray.SetTitle(fmt.Sprintf("%s\nRunning on %s:%d", a.appName, status.RunningHost, status.RunningPort))
+		a.baseApp.SetTrayTitle(fmt.Sprintf("%s\nRunning on %s:%d", a.appName, status.RunningHost, status.RunningPort))
 		a.trayMenuItems.mToggleServer.SetTitle("Stop server")
 		a.trayMenuItems.mToggleServer.Enable()
 	} else {
@@ -351,7 +339,7 @@ func (a *App) handleStatusChange(status ServerStatus) {
 		} else {
 			systray.SetIcon(trayIconStopped)
 		}
-		systray.SetTitle(fmt.Sprintf("%s\nStopped", a.appName))
+		a.baseApp.SetTrayTitle(fmt.Sprintf("%s\nStopped", a.appName))
 		a.trayMenuItems.mToggleServer.SetTitle("Start server")
 		a.trayMenuItems.mToggleServer.Enable()
 	}

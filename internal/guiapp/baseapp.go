@@ -7,6 +7,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"os"
 	"os/signal"
+	goruntime "runtime"
 )
 
 type BaseApp struct {
@@ -67,6 +68,14 @@ func (a *BaseApp) SetWindowHidden(hidden bool) {
 	}
 	if a.OnWindowHidden != nil {
 		a.OnWindowHidden(hidden)
+	}
+}
+
+func (a *BaseApp) SetTrayTitle(title string) {
+	if goruntime.GOOS == "linux" {
+		systray.SetTitle(title)
+	} else if goruntime.GOOS == "windows" {
+		systray.SetTooltip(title)
 	}
 }
 
