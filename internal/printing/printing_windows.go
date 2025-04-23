@@ -4,11 +4,8 @@ import (
 	"bytes"
 	"embed"
 	"encoding/csv"
-	"fmt"
 	"github.com/downace/print-server/internal/common"
 	"io"
-	"log"
-	"os"
 	"os/exec"
 	"slices"
 )
@@ -19,14 +16,10 @@ var embedFs embed.FS
 func ListPrinters() ([]Printer, error) {
 	cmd := exec.Command("wmic", "printer", "list", "brief", "/format:csv")
 
-	log.Printf("executing %s with %q", cmd.Path, cmd.Args)
-
-	output, err := cmd.CombinedOutput()
-
-	log.Printf("result: %q", output)
+	output, err := execAndLogCommand(cmd)
 
 	if err != nil {
-		return nil, fmt.Errorf("%s", output)
+		return nil, err
 	}
 
 	c := csv.NewReader(common.NewNormalizedLinesReader(bytes.NewReader(output)))
@@ -61,31 +54,7 @@ func PrintPDF(printer string, file io.Reader) error {
 		return err
 	}
 
-	tmpFile, err := os.CreateTemp(os.TempDir(), "print-server-*.pdf")
-
-	if err != nil {
-		return err
-	}
-
-	defer tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
-
-	_, err = io.Copy(tmpFile, file)
-
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command(sumatra, "-print-to", printer, "-silent", tmpFile.Name())
-
-	log.Printf("executing %s with %q", cmd.Path, cmd.Args)
-
-	output, err := cmd.CombinedOutput()
-
-	log.Printf("result: %q", output)
-
-	if err != nil {
-		return fmt.Errorf("%s", output)
-	}
-	return nil
+	return printPdfUsingCommand(printer, file, func(printer string, filename string) *exec.Cmd {
+		return exec.Command(sumatra, "-print-to", printer, "-silent", filename)
+	})
 }
