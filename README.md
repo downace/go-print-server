@@ -33,10 +33,6 @@ Built using [Wails 2](https://wails.io/) and Vue with [Quasar](https://quasar.de
    curl http://127.0.0.1:8888/print-pdf-url?printer=Brother_MFC_L2700DN_series&url=https%3A%2F%2Fpdfobject.com%2Fpdf%2Fsample.pdf
    ```
 
-## CLI mode
-
-Run app with `cli` argument to run server without GUI. Use `cli -help` for help
-
 ## Roadmap
 
 - [x] Build releases with GitHub Actions

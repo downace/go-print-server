@@ -39,18 +39,19 @@ func (f *headersFlag) Set(value string) error {
 	return nil
 }
 
-func RunApp(args []string) error {
+func RunApp() error {
 	conf := config.NewConfigMinimal(appconfig.NewDefaultConfig())
 	lo.Must0(conf.Load())
 
-	err := setConfigFromArgs(&conf.Data, args)
+	err := setConfigFromArgs(&conf.Data)
 
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Using config:\n\n%s\n\n", chalk.Yellow.Color(string(lo.Must(yaml.Marshal(conf.Data)))))
-	fmt.Printf("Edit %sconfig.yaml%s file or use CLI flags (see %scli -help%s) to adjust config%s\n",
+	fmt.Printf("%sEdit %sconfig.yaml%s file or use CLI flags (see %scli -help%s) to adjust config%s\n",
+		chalk.Blue,
 		chalk.Magenta,
 		chalk.Blue,
 		chalk.Magenta,
@@ -79,9 +80,7 @@ func RunApp(args []string) error {
 	return nil
 }
 
-func setConfigFromArgs(conf *appconfig.AppConfig, args []string) error {
-	fs := flag.NewFlagSet("cli", flag.ExitOnError)
-
+func setConfigFromArgs(conf *appconfig.AppConfig) error {
 	var host string
 	var port int
 	var respHeaders headersFlag
@@ -89,22 +88,18 @@ func setConfigFromArgs(conf *appconfig.AppConfig, args []string) error {
 	var certFile string
 	var keyFile string
 
-	fs.StringVar(&host, "host", "", "listen host")
-	fs.IntVar(&port, "port", 0, "listen port")
-	fs.Var(&respHeaders, "header", "response header, can be specified multiple times")
-	fs.BoolVar(&enableTls, "tls", false, "enable TLS")
-	fs.StringVar(&certFile, "cert-file", "", "TLS certificate file path")
-	fs.StringVar(&keyFile, "key-file", "", "TLS key file path")
+	flag.StringVar(&host, "host", "", "listen host")
+	flag.IntVar(&port, "port", 0, "listen port")
+	flag.Var(&respHeaders, "header", "response header, can be specified multiple times")
+	flag.BoolVar(&enableTls, "tls", false, "enable TLS")
+	flag.StringVar(&certFile, "cert-file", "", "TLS certificate file path")
+	flag.StringVar(&keyFile, "key-file", "", "TLS key file path")
 
-	err := fs.Parse(args)
-
-	if err != nil {
-		return err
-	}
+	flag.Parse()
 
 	var validationError error
 
-	fs.Visit(func(f *flag.Flag) {
+	flag.Visit(func(f *flag.Flag) {
 		if validationError != nil {
 			return
 		}
