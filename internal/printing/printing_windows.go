@@ -8,6 +8,7 @@ import (
 	"io"
 	"os/exec"
 	"slices"
+	"syscall"
 )
 
 //go:embed SumatraPDF.exe
@@ -15,6 +16,7 @@ var embedFs embed.FS
 
 func ListPrinters() ([]Printer, error) {
 	cmd := exec.Command("wmic", "printer", "list", "brief", "/format:csv")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	output, err := execAndLogCommand(cmd)
 
