@@ -16,8 +16,6 @@ type BaseApp struct {
 	InitTray       func()
 	OnWindowHidden func(hidden bool)
 
-	trayStart             func()
-	trayEnd               func()
 	hidden                bool
 	shouldShutdownOnClose bool
 }
@@ -32,12 +30,11 @@ func (a *BaseApp) Startup(ctx context.Context) {
 			a.shouldShutdownOnClose = true
 		})
 
-		a.trayStart, a.trayEnd = systray.RunWithExternalLoop(a.InitTray, nil)
-		a.trayStart()
+		go systray.Run(a.InitTray, nil)
 	}
 }
 
-func (a *BaseApp) BeforeClose(ctx context.Context) (prevent bool) {
+func (a *BaseApp) BeforeClose(_ context.Context) (prevent bool) {
 	if a.InitTray == nil {
 		return false
 	}
@@ -54,8 +51,8 @@ func (a *BaseApp) Quit() {
 }
 
 func (a *BaseApp) Shutdown(_ context.Context) {
-	if a.trayEnd != nil {
-		a.trayEnd()
+	if a.InitTray != nil {
+		systray.Quit()
 	}
 }
 
