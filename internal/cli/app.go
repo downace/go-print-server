@@ -87,6 +87,8 @@ func setConfigFromArgs(conf *appconfig.AppConfig) error {
 	var enableTls bool
 	var certFile string
 	var keyFile string
+	var authUsername string
+	var authPassword string
 
 	flag.StringVar(&host, "host", "", "listen host")
 	flag.IntVar(&port, "port", 0, "listen port")
@@ -94,6 +96,8 @@ func setConfigFromArgs(conf *appconfig.AppConfig) error {
 	flag.BoolVar(&enableTls, "tls", false, "enable TLS")
 	flag.StringVar(&certFile, "cert-file", "", "TLS certificate file path")
 	flag.StringVar(&keyFile, "key-file", "", "TLS key file path")
+	flag.StringVar(&authUsername, "auth-username", "", "Basic authentication username")
+	flag.StringVar(&authPassword, "auth-password", "", "Basic authentication password")
 
 	flag.Parse()
 
@@ -125,6 +129,12 @@ func setConfigFromArgs(conf *appconfig.AppConfig) error {
 			conf.TLS.CertFile = certFile
 		case "key-file":
 			conf.TLS.KeyFile = keyFile
+		case "auth-username":
+			conf.Auth.Enabled = true
+			conf.Auth.Username = authUsername
+		case "auth-password":
+			conf.Auth.Enabled = true
+			conf.Auth.Password = authPassword
 		}
 	})
 
