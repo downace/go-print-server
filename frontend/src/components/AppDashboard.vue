@@ -23,7 +23,9 @@ const statusToggle = computed({
 });
 
 const serverAddress = computed(
-  () => serverStore.runningAddr ?? `${configStore.host}:${configStore.port}`,
+  () =>
+    serverStore.runningAddr ??
+    `${configStore.config.host}:${configStore.config.port}`,
 );
 </script>
 
