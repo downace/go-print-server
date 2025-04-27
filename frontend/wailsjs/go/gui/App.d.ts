@@ -15,6 +15,12 @@ export function StartServer():Promise<void>;
 
 export function StopServer():Promise<void>;
 
+export function UpdateAuthEnabled(arg1:boolean):Promise<void>;
+
+export function UpdateAuthPassword(arg1:string):Promise<void>;
+
+export function UpdateAuthUsername(arg1:string):Promise<void>;
+
 export function UpdateResponseHeaders(arg1:Record<string, string>):Promise<void>;
 
 export function UpdateServerHost(arg1:string):Promise<void>;

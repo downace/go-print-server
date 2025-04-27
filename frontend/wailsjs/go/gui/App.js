@@ -26,6 +26,18 @@ export function StopServer() {
   return window['go']['gui']['App']['StopServer']();
 }
 
+export function UpdateAuthEnabled(arg1) {
+  return window['go']['gui']['App']['UpdateAuthEnabled'](arg1);
+}
+
+export function UpdateAuthPassword(arg1) {
+  return window['go']['gui']['App']['UpdateAuthPassword'](arg1);
+}
+
+export function UpdateAuthUsername(arg1) {
+  return window['go']['gui']['App']['UpdateAuthUsername'](arg1);
+}
+
 export function UpdateResponseHeaders(arg1) {
   return window['go']['gui']['App']['UpdateResponseHeaders'](arg1);
 }

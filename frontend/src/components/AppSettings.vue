@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppSettingsAuth from "@/components/AppSettings/AppSettingsAuth.vue";
 import AppSettingsHeaders from "@/components/AppSettings/AppSettingsHeaders.vue";
 import AppSettingsListen from "@/components/AppSettings/AppSettingsListen.vue";
 import AppSettingsTls from "@/components/AppSettings/AppSettingsTls.vue";
@@ -19,18 +20,19 @@ const configStore = useConfigStore();
         <q-btn flat round icon="mdi-close" to="/" title="Close" />
       </q-toolbar>
 
-      <div class="col column no-wrap q-pa-xs q-gutter-y-sm">
-        <template v-if="configStore.isLoaded">
+      <div class="col column no-wrap q-pa-xs scroll-y">
+        <div v-if="configStore.isLoaded" class="q-gutter-y-sm">
           <app-settings-listen />
           <app-settings-headers />
           <app-settings-tls />
-        </template>
-        <template v-else>
+          <app-settings-auth />
+        </div>
+        <div v-else class="full-height q-gutter-y-sm">
           <q-skeleton type="rect" height="10%" />
           <q-skeleton type="rect" height="10%" />
           <q-skeleton type="rect" height="10%" />
           <q-skeleton type="rect" height="10%" />
-        </template>
+        </div>
       </div>
     </div>
   </q-page>

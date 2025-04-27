@@ -1,5 +1,8 @@
 import {
   GetConfig,
+  UpdateAuthEnabled,
+  UpdateAuthPassword,
+  UpdateAuthUsername,
   UpdateResponseHeaders,
   UpdateServerHost,
   UpdateServerPort,
@@ -24,6 +27,11 @@ export const useConfigStore = defineStore("config", () => {
       enabled: false,
       certFile: "",
       keyFile: "",
+    },
+    auth: {
+      enabled: false,
+      username: "",
+      password: "",
     },
   });
 
@@ -73,6 +81,22 @@ export const useConfigStore = defineStore("config", () => {
     await updateConfig(() => UpdateTLSKeyFile(keyFile), { tls: { keyFile } });
   }
 
+  async function updateAuthEnabled(enabled: boolean) {
+    await updateConfig(() => UpdateAuthEnabled(enabled), { auth: { enabled } });
+  }
+
+  async function updateAuthUsername(username: string) {
+    await updateConfig(() => UpdateAuthUsername(username), {
+      auth: { username },
+    });
+  }
+
+  async function updateAuthPassword(password: string) {
+    await updateConfig(() => UpdateAuthPassword(password), {
+      auth: { password },
+    });
+  }
+
   onBeforeMount(loadConfig);
 
   return {
@@ -86,5 +110,8 @@ export const useConfigStore = defineStore("config", () => {
     updateTlsEnabled,
     updateTlsCertFile,
     updateTlsKeyFile,
+    updateAuthEnabled,
+    updateAuthUsername,
+    updateAuthPassword,
   };
 });

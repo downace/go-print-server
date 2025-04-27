@@ -277,6 +277,38 @@ func (a *App) UpdateTLSKeyFile(newVal string) error {
 	})
 }
 
+func (a *App) UpdateAuthEnabled(newVal bool) error {
+	if a.config.Data.Auth.Enabled == newVal {
+		return nil
+	}
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
+		data.Auth.Enabled = newVal
+		return nil
+	})
+}
+
+func (a *App) UpdateAuthUsername(newVal string) error {
+	if a.config.Data.Auth.Username == newVal {
+		return nil
+	}
+
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
+		data.Auth.Username = newVal
+		return nil
+	})
+}
+
+func (a *App) UpdateAuthPassword(newVal string) error {
+	if a.config.Data.Auth.Password == newVal {
+		return nil
+	}
+
+	return a.config.Transaction(func(data *appconfig.AppConfig) error {
+		data.Auth.Password = newVal
+		return nil
+	})
+}
+
 func validateFile(path string) error {
 	stat, err := os.Stat(path)
 

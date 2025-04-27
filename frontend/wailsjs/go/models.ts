@@ -1,5 +1,10 @@
 export namespace appconfig {
 	
+	export interface AuthConfig {
+	    enabled: boolean;
+	    username: string;
+	    password: string;
+	}
 	export interface TLSConfig {
 	    enabled: boolean;
 	    certFile: string;
@@ -10,7 +15,9 @@ export namespace appconfig {
 	    port: number;
 	    responseHeaders: Record<string, string>;
 	    tls: TLSConfig;
+	    auth: AuthConfig;
 	}
+	
 
 }
 
