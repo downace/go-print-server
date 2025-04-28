@@ -33,6 +33,14 @@ const serverAddress = computed(
   <q-page :style-fn="fullHeightPageStyleFn">
     <div class="full-height column no-wrap">
       <q-toolbar>
+        <q-btn
+          flat
+          round
+          icon="mdi-file-code"
+          to="/snippets"
+          title="Code snippets"
+        />
+
         <q-space />
 
         <q-btn flat round icon="mdi-cog" to="/settings" title="Settings" />
