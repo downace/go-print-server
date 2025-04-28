@@ -101,7 +101,7 @@ func createServer(
 	router.
 		Path("/print-pdf").
 		Methods("POST").
-		Headers("Content-Type", "application/json").
+		Headers("Content-Type", "application/pdf").
 		HandlerFunc(printPdf)
 
 	router.
