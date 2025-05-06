@@ -40,8 +40,8 @@ func PrintPDFFromUrl(printer string, url string) error {
 	return PrintPDF(printer, resp.Body)
 }
 
-func PrintFromUrl(printer string, url string) error {
-	pdfFile, err := urlToPdf(url)
+func PrintFromUrl(printer string, url string, options *proto.PagePrintToPDF) error {
+	pdfFile, err := urlToPdf(url, options)
 
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func initBrowserPage() (*rod.Page, error) {
 	return page, nil
 }
 
-func urlToPdf(url string) (pdfFile io.Reader, err error) {
+func urlToPdf(url string, options *proto.PagePrintToPDF) (pdfFile io.Reader, err error) {
 	page, err := initBrowserPage()
 	if err != nil {
 		return
@@ -95,7 +95,7 @@ func urlToPdf(url string) (pdfFile io.Reader, err error) {
 		return
 	}
 
-	pdfFile, err = page.PDF(&proto.PagePrintToPDF{})
+	pdfFile, err = page.PDF(options)
 	return pdfFile, err
 }
 

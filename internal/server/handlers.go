@@ -6,6 +6,7 @@ import (
 	"github.com/downace/print-server/internal/printing"
 	"github.com/go-playground/form/v4"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-rod/rod/lib/proto"
 	"net/http"
 )
 
@@ -129,6 +130,29 @@ func printPdfFromUrl(w http.ResponseWriter, r *http.Request) {
 type PrintFromUrlQuery struct {
 	Printer string `form:"printer" validate:"required"`
 	Url     string `form:"url" validate:"required,url"`
+
+	// See proto.PagePrintToPDF
+	Orientation  *string  `form:"orientation" validate:"omitnil,oneof=portrait landscape"`
+	PaperWidth   *float64 `form:"paper-width" validate:"omitnil,gt=0"`
+	PaperHeight  *float64 `form:"paper-height" validate:"omitnil,gt=0"`
+	MarginTop    *float64 `form:"margin-top" validate:"omitnil,gte=0"`
+	MarginBottom *float64 `form:"margin-bottom" validate:"omitnil,gte=0"`
+	MarginLeft   *float64 `form:"margin-left" validate:"omitnil,gte=0"`
+	MarginRight  *float64 `form:"margin-right" validate:"omitnil,gte=0"`
+	Pages        string   `form:"pages"`
+}
+
+func (q PrintFromUrlQuery) ToPrintParams() *proto.PagePrintToPDF {
+	return &proto.PagePrintToPDF{
+		Landscape:    q.Orientation != nil && *q.Orientation == "landscape",
+		PaperWidth:   q.PaperWidth,
+		PaperHeight:  q.PaperHeight,
+		MarginTop:    q.MarginTop,
+		MarginBottom: q.MarginBottom,
+		MarginLeft:   q.MarginLeft,
+		MarginRight:  q.MarginRight,
+		PageRanges:   q.Pages,
+	}
 }
 
 func printFromUrl(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +163,7 @@ func printFromUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = printing.PrintFromUrl(q.Printer, q.Url)
+	err = printing.PrintFromUrl(q.Printer, q.Url, q.ToPrintParams())
 
 	if err != nil {
 		handleError(err, w)

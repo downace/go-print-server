@@ -25,9 +25,6 @@ You can also [build manually from sources](#development)
 
 ## Server API
 
-> Currently, API is very limited, just allowing to list printers and print files/urls without any options.
-> Feel free to file an issue if you need more features or options.
-
 - `GET /printers` - get list of available printers
    ```shell
    curl http://127.0.0.1:8888/printers
@@ -46,8 +43,11 @@ You can also [build manually from sources](#development)
 - `POST /print-url` - print any file from URL
    > Loaded file is converted to PDF with [Rod](https://go-rod.github.io) which uses Chromium by default.
    > First call to this method may take some time as Chromium needs to be loaded
+
+   Query params: see `PrintFromUrlQuery` in `internal/server/handlers.go`
+
    ```shell
-   curl http://127.0.0.1:8888/print-pdf-url?printer=Brother_MFC_L2700DN_series&url=https%3A%2F%2Fhttpstat.us%2F
+   curl http://127.0.0.1:8888/print-pdf-url?printer=Brother_MFC_L2700DN_series&url=https%3A%2F%2Fhttpstat.us%2F&pages=2-7
    ```
 
 ## Development
