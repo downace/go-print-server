@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/downace/print-server/internal/printing"
+	"github.com/go-playground/form/v4"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 )
 
@@ -40,6 +42,34 @@ func handleError(err error, w http.ResponseWriter) {
 	}
 }
 
+func validateRequest[T any](r *http.Request) (*T, error) {
+	dec := form.NewDecoder()
+	var result T
+	err := dec.Decode(&result, r.URL.Query())
+
+	if err != nil {
+		return nil, err
+	}
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	err = validate.Struct(result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func handleValidateRequestError(w http.ResponseWriter, err error) {
+	var valErr validator.ValidationErrors
+	if errors.As(err, &valErr) {
+		RespondError(w, err.Error(), http.StatusUnprocessableEntity)
+	} else {
+		RespondError(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func getPrinters(w http.ResponseWriter, _ *http.Request) {
 	printers, err := printing.ListPrinters()
 
@@ -51,15 +81,19 @@ func getPrinters(w http.ResponseWriter, _ *http.Request) {
 	RespondOk(w, map[string][]printing.Printer{"printers": printers})
 }
 
-func printPdf(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
+type PrintPdfQuery struct {
+	Printer string `form:"printer" validate:"required"`
+}
 
-	if !q.Has("printer") {
-		RespondError(w, "printer param missing", http.StatusUnprocessableEntity)
+func printPdf(w http.ResponseWriter, r *http.Request) {
+	q, err := validateRequest[PrintPdfQuery](r)
+
+	if err != nil {
+		handleValidateRequestError(w, err)
 		return
 	}
 
-	err := printing.PrintPDF(q.Get("printer"), r.Body)
+	err = printing.PrintPDF(q.Printer, r.Body)
 
 	if err != nil {
 		handleError(err, w)
@@ -67,22 +101,22 @@ func printPdf(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondOk(w, nil)
+}
+
+type PrintPdfFromUrlQuery struct {
+	Printer string `form:"printer" validate:"required"`
+	Url     string `form:"url" validate:"required,url"`
 }
 
 func printPdfFromUrl(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
+	q, err := validateRequest[PrintPdfFromUrlQuery](r)
 
-	if !q.Has("printer") {
-		RespondError(w, "printer param missing", http.StatusUnprocessableEntity)
+	if err != nil {
+		handleValidateRequestError(w, err)
 		return
 	}
 
-	if !q.Has("url") {
-		RespondError(w, "url param missing", http.StatusUnprocessableEntity)
-		return
-	}
-
-	err := printing.PrintPDFFromUrl(q.Get("printer"), q.Get("url"))
+	err = printing.PrintPDFFromUrl(q.Printer, q.Url)
 
 	if err != nil {
 		handleError(err, w)
@@ -92,20 +126,20 @@ func printPdfFromUrl(w http.ResponseWriter, r *http.Request) {
 	RespondOk(w, nil)
 }
 
+type PrintFromUrlQuery struct {
+	Printer string `form:"printer" validate:"required"`
+	Url     string `form:"url" validate:"required,url"`
+}
+
 func printFromUrl(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
+	q, err := validateRequest[PrintFromUrlQuery](r)
 
-	if !q.Has("printer") {
-		RespondError(w, "printer param missing", http.StatusUnprocessableEntity)
+	if err != nil {
+		handleValidateRequestError(w, err)
 		return
 	}
 
-	if !q.Has("url") {
-		RespondError(w, "url param missing", http.StatusUnprocessableEntity)
-		return
-	}
-
-	err := printing.PrintFromUrl(q.Get("printer"), q.Get("url"))
+	err = printing.PrintFromUrl(q.Printer, q.Url)
 
 	if err != nil {
 		handleError(err, w)
