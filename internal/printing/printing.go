@@ -2,6 +2,8 @@ package printing
 
 import (
 	"fmt"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +18,8 @@ type Printer struct {
 
 var ErrNotSupported = fmt.Errorf("method not supported on %s", runtime.GOOS)
 var ErrRequestError = fmt.Errorf("request error")
+
+var browserPage *rod.Page
 
 func PrintPDFFromUrl(printer string, url string) error {
 	resp, err := http.Get(url)
@@ -34,6 +38,65 @@ func PrintPDFFromUrl(printer string, url string) error {
 	}
 
 	return PrintPDF(printer, resp.Body)
+}
+
+func PrintFromUrl(printer string, url string) error {
+	pdfFile, err := urlToPdf(url)
+
+	if err != nil {
+		return err
+	}
+
+	return PrintPDF(printer, pdfFile)
+}
+
+func initBrowserPage() (*rod.Page, error) {
+	if browserPage != nil {
+		return browserPage, nil
+	}
+	browser := rod.New()
+
+	err := browser.Connect()
+
+	if err != nil {
+		return nil, err
+	}
+
+	page, err := browser.Page(proto.TargetCreateTarget{})
+	if err != nil {
+		return nil, err
+	}
+
+	browserPage = page
+	return page, nil
+}
+
+func urlToPdf(url string) (pdfFile io.Reader, err error) {
+	page, err := initBrowserPage()
+	if err != nil {
+		return
+	}
+
+	responseReceivedEvent := proto.NetworkResponseReceived{}
+	waitResponse := page.WaitEvent(&responseReceivedEvent)
+	err = page.Navigate(url)
+	if err != nil {
+		return
+	}
+	waitResponse()
+
+	if resp := responseReceivedEvent.Response; resp.Status >= 300 {
+		err = fmt.Errorf("%w: response from URL was %d %s", ErrRequestError, resp.Status, resp.StatusText)
+		return
+	}
+
+	err = page.WaitLoad()
+	if err != nil {
+		return
+	}
+
+	pdfFile, err = page.PDF(&proto.PagePrintToPDF{})
+	return pdfFile, err
 }
 
 func execAndLogCommand(cmd *exec.Cmd) (output []byte, err error) {

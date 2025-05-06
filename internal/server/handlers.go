@@ -91,3 +91,26 @@ func printPdfFromUrl(w http.ResponseWriter, r *http.Request) {
 
 	RespondOk(w, nil)
 }
+
+func printFromUrl(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	if !q.Has("printer") {
+		RespondError(w, "printer param missing", http.StatusUnprocessableEntity)
+		return
+	}
+
+	if !q.Has("url") {
+		RespondError(w, "url param missing", http.StatusUnprocessableEntity)
+		return
+	}
+
+	err := printing.PrintFromUrl(q.Get("printer"), q.Get("url"))
+
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+
+	RespondOk(w, nil)
+}

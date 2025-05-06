@@ -109,6 +109,11 @@ func createServer(
 		Methods("POST").
 		HandlerFunc(printPdfFromUrl)
 
+	router.
+		Path("/print-url").
+		Methods("POST").
+		HandlerFunc(printFromUrl)
+
 	router.MethodNotAllowedHandler = http.HandlerFunc(methodNotAllowed)
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 
