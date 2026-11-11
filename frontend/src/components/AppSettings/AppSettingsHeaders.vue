@@ -4,7 +4,11 @@ import { useConfigStore } from "@/configStore";
 
 const configStore = useConfigStore();
 
-const { value: headersStr, error: headersError } = useSettingsField(
+const {
+  value: headersStr,
+  error: headersError,
+  clearError: clearHeadersError,
+} = useSettingsField(
   () =>
     Object.entries(configStore.config.responseHeaders)
       .map(([name, value]) => `${name}: ${value}`)
@@ -39,7 +43,7 @@ Access-Control-Allow-Headers: Accept
         rows="4"
         :model-value="headersStr"
         @change="headersStr = $event"
-        @input="headersError = ''"
+        @input="clearHeadersError()"
         :placeholder="responseHeadersPlaceholder"
         :error="!!headersError"
         :error-message="headersError"

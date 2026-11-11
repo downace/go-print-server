@@ -15,8 +15,13 @@ export default function useSettingsField<T = string>(
     }
   });
 
+  function clearError() {
+    error.value = "";
+  }
+
   return {
     value: field,
     error: readonly(error),
+    clearError,
   };
 }

@@ -10,12 +10,20 @@ const { value: authEnabled, error: authEnabledError } = useSettingsField(
   configStore.updateAuthEnabled,
 );
 
-const { value: username, error: usernameError } = useSettingsField(
+const {
+  value: username,
+  error: usernameError,
+  clearError: clearUsernameError,
+} = useSettingsField(
   () => configStore.config.auth.username,
   configStore.updateAuthUsername,
 );
 
-const { value: password, error: passwordError } = useSettingsField(
+const {
+  value: password,
+  error: passwordError,
+  clearError: clearPasswordError,
+} = useSettingsField(
   () => configStore.config.auth.password,
   configStore.updateAuthPassword,
 );
@@ -39,7 +47,7 @@ const { value: password, error: passwordError } = useSettingsField(
           label="Username"
           :model-value="username"
           @change="username = $event"
-          @input="usernameError = ''"
+          @input="clearUsernameError()"
           :error="!!usernameError"
           :error-message="usernameError"
         />
@@ -48,7 +56,7 @@ const { value: password, error: passwordError } = useSettingsField(
           label="Password"
           :model-value="password"
           @change="password = $event"
-          @input="passwordError = ''"
+          @input="clearPasswordError()"
           :error="!!passwordError"
           :error-message="passwordError"
         />

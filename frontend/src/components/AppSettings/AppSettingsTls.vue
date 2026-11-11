@@ -10,12 +10,20 @@ const { value: tlsEnabled, error: tlsEnabledError } = useSettingsField(
   configStore.updateTlsEnabled,
 );
 
-const { value: certFile, error: certFileError } = useSettingsField(
+const {
+  value: certFile,
+  error: certFileError,
+  clearError: clearCertFileError,
+} = useSettingsField(
   () => configStore.config.tls.certFile,
   configStore.updateTlsCertFile,
 );
 
-const { value: keyFile, error: keyFileError } = useSettingsField(
+const {
+  value: keyFile,
+  error: keyFileError,
+  clearError: clearKeyFileError,
+} = useSettingsField(
   () => configStore.config.tls.keyFile,
   configStore.updateTlsKeyFile,
 );
@@ -38,13 +46,15 @@ const { value: keyFile, error: keyFileError } = useSettingsField(
           v-if="tlsEnabled"
           label="Cert File"
           v-model="certFile"
-          v-model:error="certFileError"
+          :error="certFileError"
+          @update:error="clearCertFileError()"
         />
         <file-picker
           v-if="tlsEnabled"
           label="Key File"
           v-model="keyFile"
-          v-model:error="keyFileError"
+          :error="keyFileError"
+          @update:error="clearKeyFileError()"
         />
       </div>
     </q-card-section>

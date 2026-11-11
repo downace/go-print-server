@@ -10,7 +10,11 @@ const { value: host, error: hostError } = useSettingsField(
   configStore.updateHost,
 );
 
-const { value: port, error: portError } = useSettingsField(
+const {
+  value: port,
+  error: portError,
+  clearError: clearPortError,
+} = useSettingsField(
   () => String(configStore.config.port),
   (newPort) => {
     const portNumber = Number.parseInt(newPort);
@@ -34,7 +38,7 @@ const { value: port, error: portError } = useSettingsField(
           <q-input
             :model-value="port"
             @change="port = $event"
-            @input="portError = ''"
+            @input="clearPortError()"
             type="number"
             label="Port"
             :error="!!portError"
